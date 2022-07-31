@@ -13,6 +13,7 @@
     "express-async-handler": "^1.2.0",
     "google-auth-library": "^8.1.1",
     "googleapis": "^105.0.0",
-    "html-to-text": "^8.2.0"
+    "html-to-text": "^8.2.0",
+    "openai": "^3.0.0"
   }
 }
