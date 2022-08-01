@@ -33,7 +33,7 @@ async function getGMailContent(gmail, messages) {
                 });
 
                 emailContent.push(deconstructEmail(gmResponse, messages[i])); //also pass in the message object at this index to deconstructEmail
-
+                
             } catch (err) {
                 //If there is an error, return it and end the function
                 return err;
@@ -51,6 +51,7 @@ async function getGMailContent(gmail, messages) {
 //Return the JSON object (email)
 function deconstructEmail(gmResponse, message) {
     //create a JSON object to store two items for each email: the headers & the body text
+        
     const email = {
         id: '',
         threadID: '',
@@ -67,15 +68,15 @@ function deconstructEmail(gmResponse, message) {
             plainText: '',
         },
         bodyAbbreviated: {
-            htmlTextAbv: '',
+            sourceAbv: '',
             plainTextAbv: '',
         }
     };
 
     //Add the email identifiers and labels to the JSON object (id, threadID, labels) from message
     email.id = message.id;
-    email.threadID = message.threadId;
-    email.labels = message.labelIds;
+    email.threadID = message.threadID;
+    email.labels = message.labels;
     email.snippet = message.snippet;
     email.headers.from = message.from;
     email.headers.to = message.to;
@@ -84,13 +85,17 @@ function deconstructEmail(gmResponse, message) {
 
     //dencode the Base64 body of the email (path 'message.data.payload.parts[1].body.data')
     //place into bodyFull object
+    
     email.bodyFull.htmlText = decodeBody(gmResponse.data.payload.parts[1].body.data);
-    email.bodyFull.plainText = convertHTMLBody(email.bodyFull.htmlText);
+    email.bodyFull.plainText = decodeBody(gmResponse.data.payload.parts[0].body.data);
 
     //split bodyFull.htmlText on first instance of '<br>' and place first part into bodyAbbreviated.htmlTextabv 
     //convert from html and place in bodyAbbreviated.plainTextabv
-    email.bodyAbbreviated.htmlTextAbv = email.bodyFull.htmlText.split('<div class="gmail_quote">')[0];
-    email.bodyAbbreviated.plainTextAbv = convertHTMLBody(email.bodyAbbreviated.htmlTextAbv);
+    email.bodyAbbreviated.sourceAbv = email.bodyFull.htmlText.split('<div class="gmail_quote">')[0];
+    email.bodyAbbreviated.plainTextAbv = convertHTMLBody(email.bodyAbbreviated.sourceAbv);
+
+    //in .plainTextAbv, replace all instances of '\n' with ' '
+    email.bodyAbbreviated.plainTextAbv = email.bodyAbbreviated.plainTextAbv.replace(/\n/g, ' ');
 
     return email;
 }
@@ -115,9 +120,9 @@ function convertHTMLBody(html) {
 
     try {
         plainText = convert(html, {
-            // selectors: [
-            //     { selector: '*', format: 'skip' }
-            // ],
+            selectors: [
+                { selector: 'img', format: 'skip' }
+            ],
             wordwrap: false
         }).replace(/&#39;/g, "'")
     } catch (err) {

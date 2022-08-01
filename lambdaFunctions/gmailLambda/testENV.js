@@ -1,7 +1,10 @@
 const AWS = require("aws-sdk");
 const { authenticateGoogle } = require("./middleware/authentication/gmailAuthentication");
+const { authenticateOpenAI } = require("./middleware/authentication/openAIAuthentication"); 
 // const { getGMailHeaders } = require("./middleware/emailFetchers/fetchGmailHeaders");
 const { getGMailContent } = require("./middleware/emailFetchers/fetchGmailFullContent");
+const { convertEmailToSummaryInput } = require("./middleware/summarization/preparationAndCleaning/emailPreparation");
+const { getSummarization, costCalculator } = require("./middleware/summarization/summarizationEngine/summarizationEngine");
 
 const exampleMessagesArr = [
   {
@@ -46,11 +49,64 @@ const exampleMessagesArr = [
   }
 ]; 
 
-const gmail = authenticateGoogle();
+function testSummary(){
+ 
 
-//print content from getGMailContent by passing through gmail and exampleMessagesArr using a then function
-getGMailContent(gmail, exampleMessagesArr).then(data => {
-  console.log(data)
-}).catch(err => {
-  console.log(err)
-});
+  const gmail = authenticateGoogle();
+  const openai = authenticateOpenAI();
+  let summaries = [];
+  let aiOutput = {
+    id: '',
+    model: '',
+    prompt: '',
+    completion: '',
+    usage: {  },
+    cost: {  }
+  };
+
+
+  //print content from getGMailContent by passing through gmail and exampleMessagesArr using a then function
+  //then pass the result to the convertEmailToSummaryInput function
+  //then pass to summarizeEmail function
+  getGMailContent(gmail, exampleMessagesArr).then(emails => {
+    
+    //loop through emails
+    emails.forEach(email => {
+      //convert email to string
+      let promptString = convertEmailToSummaryInput(email);
+      //summarize email
+      getSummarization(openai, promptString).then(summary => {
+        //add summary components to aiOutput object
+        aiOutput.id = summary.id;
+        aiOutput.model = summary.model;
+        aiOutput.prompt = promptString
+        aiOutput.completion = summary.choices[0].text;
+        aiOutput.usage = summary.usage;
+        aiOutput.cost = costCalculator(summary);
+
+        //push aiOutput object to summaries array
+        summaries.push(aiOutput);
+      }).catch(err => {
+        summaries = ['Error: ' + err];
+      })
+    })
+  }).catch(err => {
+    summaries = ['Error: Summarization error. Please notify support for assistance.']; // In the router THIS WON'T BE PRINTED
+  });
+
+  console.log(summaries);
+
+  return summaries;
+}
+
+function testParseEmail(){
+  const gmail = authenticateGoogle();
+
+  getGMailContent(gmail, exampleMessagesArr).then(emails => {
+    emails.forEach(email => {
+      console.log(email);
+    })
+  })
+}
+
+console.log(testSummary());

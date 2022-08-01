@@ -1,14 +1,17 @@
 //require google from googleapis (External library)
 const {google} = require('googleapis');
+const { googleSecrets } = require("../../../../../secrets.js");
 
 // Create new function to authenticate with Google
 function authenticateGoogle() {
 
+    const config = googleSecrets;
+
     //Set creditals
-    const CLIENT_ID = '90951196590-uijil7r82f1eg9berst8jgnrs8kld83c.apps.googleusercontent.com';
-    const CLIENT_SECRET = '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';
-    const REFRESH_TOKEN = '1//04Pb3hxMvIlZuCgYIARAAGAQSNwF-L9Irx2XWhs4dOm8YpFp8mcNSXInefHrPUmwydpQyDxQu69Bdy_KZOsRgYYS11H1ZEkwmCo4';
-    const REDIRECT_URI = 'https://developers.google.com/oauthplayground';
+    const CLIENT_ID = config.CLIENT_ID;
+    const CLIENT_SECRET = config.CLIENT_SECRET;
+    const REFRESH_TOKEN = config.REFRESH_TOKEN;
+    const REDIRECT_URI = config.REDIRECT_URI;
 
     //Create a new OAuth2 client and pass in the client_id, client_secret, and redirect_uri from .env
     const OAuth2 = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
