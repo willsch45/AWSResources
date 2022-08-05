@@ -3,7 +3,7 @@ const { Configuration, OpenAIApi } = require("openai");
 const { openAISecrets } = require("../../../../../secrets.js");
 
 function authenticateOpenAI() {
-    const config = openAISecrets;
+    const config = openAISecrets();
 
     const configuration = new Configuration({
         organization: config.organization,

@@ -54,6 +54,7 @@ function testSummary(){
 
   const gmail = authenticateGoogle();
   const openai = authenticateOpenAI();
+
   let summaries = [];
   let aiOutput = {
     id: '',
@@ -86,6 +87,7 @@ function testSummary(){
 
         //push aiOutput object to summaries array
         summaries.push(aiOutput);
+        console.log(aiOutput);
       }).catch(err => {
         summaries = ['Error: ' + err];
       })
@@ -93,8 +95,6 @@ function testSummary(){
   }).catch(err => {
     summaries = ['Error: Summarization error. Please notify support for assistance.']; // In the router THIS WON'T BE PRINTED
   });
-
-  console.log(summaries);
 
   return summaries;
 }
@@ -109,4 +109,4 @@ function testParseEmail(){
   })
 }
 
-console.log(testSummary());
+testSummary();

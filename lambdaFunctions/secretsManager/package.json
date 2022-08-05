@@ -1,0 +1,14 @@
+{
+  "name": "secretsmanager",
+  "version": "1.0.0",
+  "description": "Testing out the way AWS secret manager works. Want to be sure I understand.",
+  "main": "index.js",
+  "scripts": {
+    "test": "node -e \"(async () => console.log(await require('./index').handler({})))();\""
+  },
+  "author": "Will Schober",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.1188.0"
+  }
+}

@@ -1,11 +1,12 @@
 //require google from googleapis (External library)
 const {google} = require('googleapis');
-const { googleSecrets } = require("../../../../../secrets.js");
+// import the googleSecrets function from secrets.js
+const { googleSecrets } = require('../../../../../secrets');
 
 // Create new function to authenticate with Google
 function authenticateGoogle() {
 
-    const config = googleSecrets;
+    const config = googleSecrets();
 
     //Set creditals
     const CLIENT_ID = config.CLIENT_ID;

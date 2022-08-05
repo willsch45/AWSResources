@@ -16,6 +16,7 @@ const { convert } = require('html-to-text');
     // labels: [] 
 
 async function getGMailContent(gmail, messages) {
+
     //Try to get the emails from the user's gmail account
     try {
         //create a variable to store the messages IDs from messages & an array to store the emails
@@ -35,6 +36,8 @@ async function getGMailContent(gmail, messages) {
                 emailContent.push(deconstructEmail(gmResponse, messages[i])); //also pass in the message object at this index to deconstructEmail
                 
             } catch (err) {
+                console.log('Error getting email content at inner Try-catch: ' + err);
+
                 //If there is an error, return it and end the function
                 return err;
             }
@@ -43,6 +46,8 @@ async function getGMailContent(gmail, messages) {
         return emailContent;
 
     } catch (err) {
+        console.log('Error getting emails: ', err);
+
         return err;
     }
 }
