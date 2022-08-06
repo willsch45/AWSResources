@@ -4,8 +4,8 @@ const { Configuration, OpenAIApi } = require("openai");
 function authOpenAILambda() {
 
     const configuration = new Configuration({
-        organization: process.env.OPENAI_apiKey,
-        apiKey: process.env.OPENAI_organization	 //Changed from 'process.ENV.OPENAI_API_KEY' I will get this from the secrets manager in production
+        organization: process.env.OPENAI_organization,
+        apiKey: process.env.OPENAI_apiKey	 
     });
     const openai = new OpenAIApi(configuration);
 

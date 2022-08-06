@@ -15,36 +15,19 @@ const { convert } = require('html-to-text');
     // snippet: '',
     // labels: [] 
 
-async function getGMailContent(gmail, messages) {
+async function getGMailContent(gmail, message) {
 
     //Try to get the emails from the user's gmail account
     try {
-        //create a variable to store the messages IDs from messages & an array to store the emails
-        const messageIDs = messages.map(message => message.id); //map function does a for loop over the messages array and returns an array of IDs
-        const emailContent = [];
-
-        //A For loop to iterate through the messageIDs array
-        for (let i = 0; i < messageIDs.length; i++) {
-            //Try to get the email content from the gmail API
-            try {
-                //Get the email content for each messageID
-                const gmResponse = await gmail.users.messages.get({
-                    userId: 'me',
-                    id: messageIDs[i],
-                });
-
-                emailContent.push(deconstructEmail(gmResponse, messages[i])); //also pass in the message object at this index to deconstructEmail
-                
-            } catch (err) {
-                console.log('Error getting email content at inner Try-catch: ' + err);
-
-                //If there is an error, return it and end the function
-                return err;
-            }
-        }
-
-        return emailContent;
-
+        //Reconfigure to take only one email, not an array of emails
+        const gmResponse = await gmail.users.messages.get({
+            userId: 'me',
+            id: message.id,
+        });
+        
+        //Deconstruct the email and return it
+        return deconstructEmail(gmResponse, message);
+        
     } catch (err) {
         console.log('Error getting emails: ', err);
 

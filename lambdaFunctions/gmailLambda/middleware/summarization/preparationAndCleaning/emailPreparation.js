@@ -35,7 +35,7 @@ function convertEmailToSummaryInput(email) {
     emailString += '\n *EMAIL BODY:* \n';
 
     //add the email body to the string
-    emailString += `\n${email.bodyAbbreviated.plainTextAbv}\n-----\n`;
+    emailString += `\n${email.bodyAbbreviated.plainTextAbv}`;
 
     return emailString;
 }

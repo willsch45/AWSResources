@@ -1,7 +1,7 @@
 const AWS = require("aws-sdk");
 const { authGmailLambda } = require('./middleware/authenticateLambda/gmailAuthLambda');
 const { authOpenAILambda } = require("./middleware/authenticateLambda/openAIAuthLambda");
-const { getGMailContent } = require("./middleware/emailFetchers/gmailFetchFullContent");
+const { getGMailContent } = require("./middleware/emailFetchers/fetchGmailFullContent");
 const { getGMailHeaders } = require("./middleware/emailFetchers/fetchGmailHeaders");
 const { getSummarization } = require("./middleware/summarization/summarizationEngine/summarizationEngine");
 const { convertEmailToSummaryInput } = require("./middleware/summarization/preparationAndCleaning/emailPreparation");
@@ -17,10 +17,10 @@ exports.handler = async (event, context) => {
 
   try {
     switch (event.routeKey) {
-        case "GET /emailHeaders":
+        case "GET /emailHeaders": //Now this is timing out the function. Not sure what to make of that
           //get the number of emails to generate
-          let eventPayload = JSON.parse(event.body); //not sure about parse here.
-          let numEmails = eventPayload.num; 
+          const eventPayload1 = JSON.parse(event.body); //not sure about parse here.
+          const numEmails = eventPayload1.num; 
 
           //Authenticate with Google to get gmail variable, then get email Headers
           const gmailH = authGmailLambda();
@@ -30,8 +30,10 @@ exports.handler = async (event, context) => {
             statusCode = 500;
           });
 
-        case 'GET /emailSummary':
-          //The event payload is going to an array of email objects which, in turn, will have the following structure (tentatively!)
+          break;
+
+        case "GET /emailSummary":
+          //The event payload is going to be an email objects which, in turn, will have the following structure (tentatively!)
             /* {
                   // id: '',
                   // threadID: '',
@@ -44,48 +46,31 @@ exports.handler = async (event, context) => {
             } */
 
             //Get event payload and save to a variable
-            let emailSet = JSON.parse(event.body);
-
-            // Process flow FOR EACH email in the set:
-              // 1. Authenticate with Google to get gmail variable, then authenticate with OpenAI to get openAI variable
-              // 2. Create an array to hold: full emails, 
-              // 3. Get the email content for each email in the email set (pass to fetchGmailFullContent) - IMPORTED
-              // 4. Return the email content to a new variable (fullEmails) - ASYNC
-              // 5. Prepare the email content for summarization (pass to convertEmailToSummaryInput) - IMPORTED
-              // 6. Summarize the email content (pass to getSummarization) - IMPORTED
-              // 7. Return the summary to a new variable (summaries) - ASYNC
-              // 8. Push to emailSummaries array
-                  // 9. Store the summary in DynamoDB - IMPORT --- DO THIS LATER
-              // 10. Return the summary to the caller (body) - ASYNC, catch error and pass to body with statusCode 500 
+            const eventPayload2 = JSON.parse(event.body);
+            const receivedEmail = eventPayload2.email;
 
             //1. Authenticate to get Gmail and OpenAI config variables
             const gmailS = authGmailLambda();
             const openAIS = authOpenAILambda();
-            const emailSummaries = [];
 
-            //For each email in emailSet, get the email content and summarize it
-            for (let i = 0; i < emailSet.length; i++) {
-              //2. Get the email content for each email in the email set (pass to fetchGmailFullContent)
-              //3. Return the email content to a new variable (fullEmails) - ASYNC
-              const fullEmail = await getGMailContent(gmailS, emailSet[i].id).catch(err => {
-                body = 'Error retreiving full email: ' + err;
-                statusCode = 500;
-              }).then(fullEmail => {
-                //4. Prepare the email content for summarization (pass to convertEmailToSummaryInput)
-                const emailSummary = convertEmailToSummaryInput(fullEmail);
+            //2.1 For each email in the array, get the email content
+            const fullEmail = await getGMailContent(gmailS, receivedEmail).catch(err => {
+              body = 'Lambda processing error, Gmail content: ' + err;
+              statusCode = 500;
+            });
 
-                //5. Summarize the email content (pass to getSummarization)
-                const summary = await getSummarization(openAIS, emailSummary).catch(err => {
-                  body = 'Error summarizing email: ' + err;
-                  statusCode = 500;
-                }).then(summary => {
-                  // 8. Push to emailSummaries array
-                  emailSummaries.push(summary);
-                });
-              });
+            const prompt = convertEmailToSummaryInput(fullEmail);
+            const completion = await getSummarization(openAIS, prompt).catch(err => {
+              body = 'Lambda processing error, OpenAI: ' + err;
+              statusCode = 500;
+            });
+
+            body = {
+              prompt: prompt,
+              competion: completion
             }
-
             
+            break;
 
       default:
         throw new Error(`Unsupported route: "${event.routeKey}"`);
