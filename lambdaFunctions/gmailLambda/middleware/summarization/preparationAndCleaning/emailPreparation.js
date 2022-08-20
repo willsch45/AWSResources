@@ -21,23 +21,56 @@
 //     }
 // };
 
+//Structure of output:
+/*
+    {
+        prompt: emailString,
+        rawInput: ,
+        instructions: instructions,
+        taskTags: taskTags
+    }
+*/
+
 //Create a function that converts the email object into a string for summary
 function convertEmailToSummaryInput(email) {
-    //create a string to store the email
-    let emailString = 'Summarize the following email for the recipient: \n\n ----- \n';
+    const instructions = '**Instruction: Summarize the following email for the recipient**';
+    const taskTags = ['Summarize', 'Communication'];
+    let emailString = '';
+    let rawInput = '';
 
     //add the email headers to the string
-    emailString += `From: ${email.headers.from}\n`;
-    emailString += `To: ${email.headers.to}\n`;
+    rawInput += `From: ${email.headers.from}\n`;
+    rawInput += `To: ${email.headers.to}\n`;
     //emailString += `Date: ${email.headers.date}\n`;
-    emailString += `Subject: ${email.headers.subject}\n`;
+    rawInput += `Subject: ${email.headers.subject}\n`;
 
-    emailString += '\n *EMAIL BODY:* \n';
+    rawInput += '\n *EMAIL BODY:* \n';
 
     //add the email body to the string
-    emailString += `\n${email.bodyAbbreviated.plainTextAbv}`;
+    rawInput += `\n${email.bodyAbbreviated.plainTextAbv}`;
 
-    return emailString;
+    //create a string to store the email
+    emailString = instructions + '\n' + '**Task tags: ';//Adding instructions
+
+    for (let i = 0; i < taskTags.length; i++){
+        //If the last tag in the array, don't add ' | ' after the tag, otherwise add ' | '
+        if (i === taskTags.length - 1) {
+            emailString += taskTags[i];
+        } else {
+            emailString += taskTags[i] + ' | ';
+        }
+    }
+
+    emailString += '** \n------\n';
+    emailString += rawInput;
+
+    return {
+        id: '',
+        prompt: emailString,
+        rawInput: rawInput,
+        instructions: instructions,
+        taskTags: taskTags
+    };
 }
 
 module.exports = { 

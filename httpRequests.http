@@ -17,11 +17,17 @@ GET https://iz6b0as539.execute-api.us-west-2.amazonaws.com/emailHeaders HTTP/1.1
 Content-Type: application/json
 
 {
-    "num": 5
+    "num": 20
 }
 
 ###
-GET https://iz6b0as539.execute-api.us-west-2.amazonaws.com/emailSummary HTTP/1.1
+GET https://iz6b0as539.execute-api.us-west-2.amazonaws.com/emailHeaders?count=1 HTTP/1.1
+
+###
+GET https://iz6b0as539.execute-api.us-west-2.amazonaws.com/emailList?maxResults=5 HTTP/1.1
+
+### Old version of the below
+POST https://iz6b0as539.execute-api.us-west-2.amazonaws.com/emailSummary HTTP/1.1
 Content-Type: application/json
 
 {
@@ -41,4 +47,12 @@ Content-Type: application/json
         ]
     }
     
+}
+
+###
+POST https://iz6b0as539.execute-api.us-west-2.amazonaws.com/emailSummary HTTP/1.1
+Content-Type: application/json
+
+{
+    "id": "1826f0f28d5ef592"
 }

@@ -2,43 +2,93 @@ const { Configuration, OpenAIApi } = require("openai");
 
 //An async function that takes prepared strings as inputs:
     //openai: OpenAi configuration object
-    //stringToSummarize: the string to summarize
+    // instructionSet:
+    // {
+        // prompt: emailString,
+        // rawInput: rawInput,
+        // instructions: instructions,
+        // taskTags: taskTags
+    // }
 
 
 
-//The function will return JSON object with the following properties:
-    //  {
-    //     "id": "cmpl-uqkvlQyYK7bGYrRHQ0eXlWi7",
-    //     "object": "text_completion",
-    //     "created": 1589478378,
-    //     "model": "text-davinci-002",
-    //     "choices": [
-    //       {
-    //         "text": <returned text>
-    //         "index": 0,
-    //         "logprobs": null,
-    //         "finish_reason": "length"
-    //       }
-    //     ],
-    //     "usage": {
-    //       "prompt_tokens": 5,
-    //       "completion_tokens": 6,
-    //       "total_tokens": 11
-    //     }
-    //   }
 
-async function getSummarization(openai, stringToSummarize) {
-    const response = await openai.createCompletion({
+//The function will return a 'Completion' JSON object with the following properties:
+    /* 
+        {
+            id: ,
+            instruction set: {
+                id: ,
+                prompt: emailString,
+                rawInput: rawInput,
+                instructions: instructions,
+                taskTags: [taskTags]
+            },
+            completion: ,         
+            userFeedback: ,
+            configuration: {
+                model: "text-davinci-002",
+                prompt: <input string>,
+                max_tokens: 300, //using davinci model with 300 tokens will result in a maximum charge for response of $0.018 (1.8 cents)
+                temperature: 1,
+                top_p: 1,
+                n: 1,
+                frequency_penalty: 0,
+                presence_penalty: 0,
+            },
+            openAIReturn: {
+                "id": "cmpl-uqkvlQyYK7bGYrRHQ0eXlWi7",
+                "object": "text_completion",
+                "created": 1589478378,
+                "model": "text-davinci-002",
+                "choices": [
+                {
+                    "text": <returned text>
+                    "index": 0,
+                    "logprobs": null,
+                    "finish_reason": "length"
+                }
+                ],
+                "usage": {
+                    "prompt_tokens": 5,
+                    "completion_tokens": 6,
+                    "total_tokens": 11
+                }
+            },
+            cost: {
+                promptCost: 0,
+                completionCost: 0,
+                totalCost: 0
+            }
+
+        }
+    */
+
+async function getSummarization(openai, instructionSet) {
+    const modelConfig = {
         model: "text-davinci-002",
-        prompt: stringToSummarize,
+        prompt: instructionSet.prompt,
         max_tokens: 300, //using davinci model with 300 tokens will result in a maximum charge for response of $0.018 (1.8 cents)
         temperature: 1,
         top_p: 1,
+        n: 1,
         frequency_penalty: 0,
         presence_penalty: 0,
-      });
+      }
 
-    return response.data;
+    const openAIResponse = await openai.createCompletion(modelConfig);
+
+    const returnObject = {
+        id: openAIResponse.data.id,
+        instructionSet: instructionSet,
+        completion: openAIResponse.data.choices[0].text,
+        userFeedback: 'No user feedback',
+        configuration: modelConfig,
+        openAIReturn: openAIResponse.data,
+        cost: costCalculator(openAIResponse.data)
+    } 
+
+    return returnObject;
 }
 
 //Cost of summarization

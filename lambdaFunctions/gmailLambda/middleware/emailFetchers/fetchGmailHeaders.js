@@ -1,6 +1,33 @@
 //require google from googleapis and html-to-text
 const {google} = require('googleapis');
 
+//function to get a list of email IDs from the user's gmail account. Takes in a gmail object  for authentication and:
+    // maxResults - Integer - The maximum number of results to return, 
+    // pageToken - String - Page token to retrieve a specific page of results, 
+    // q - String - q is a customer query string which fits the gmail search format
+    // labelIds[] - Array[String] - Array of label IDs to search on
+    // includeSpamTrash - Boolean - True if the search should include spam and trash
+
+async function getGMailList(gmail, maxResults, pageToken, q, labelIds, includeSpamTrash) {
+    try {
+        //create a function that takes in the OAuth2 client and returns a list 5 of emails from the user's gmail account
+        const response = await gmail.users.messages.list({
+            userId: 'me',
+            maxResults: maxResults,
+            pageToken: pageToken,
+            q: q,
+            labelIds: labelIds,
+            includeSpamTrash: includeSpamTrash,
+        });
+
+        return response.data.messages;    
+         
+    } catch (err) {
+        return err;
+    }
+}
+
+
 //function to get a list of emails from the user's gmail account
 async function getGMailHeaders(gmail, numEmails) {
     try {
@@ -87,4 +114,5 @@ function deconstructToHeaders(email) {
 
 module.exports = {
     getGMailHeaders,
+    getGMailList
 };
