@@ -26,7 +26,7 @@ async function getGMailContent(gmail, messageID) {
         });
         
         //Deconstruct the email and return it
-        return deconstructEmail(gmResponse);
+        return deconstructGmail(gmResponse);
         
     } catch (err) {
         console.log('Error getting emails: ', err);
@@ -37,9 +37,9 @@ async function getGMailContent(gmail, messageID) {
 
 //Create a deconstructor function to place the email components into a JSON object for easy access. 
 //Return the JSON object (email)
-function deconstructEmail(gmResponse) {
+function deconstructGmail(gmResponse) {
     //create a JSON object to store two items for each email: the headers & the body text
-        
+    
     const email = {
         id: '',
         threadID: '',
@@ -62,21 +62,57 @@ function deconstructEmail(gmResponse) {
     };
 
     //Add the email identifiers and labels to the JSON object (id, threadID, labels) from message
-
+    //These are the same for each email
     email.id = gmResponse.data.id;
     email.threadID = gmResponse.data.threadId;
     email.labels = gmResponse.data.labelIds;
-    email.snippet = gmResponse.data.snippet;
+    email.snippet = gmResponse.data.snippet.replace(/&#39;/g, "'");
     email.headers.from = gmResponse.data.payload.headers.find(header => header.name === 'From').value;
     email.headers.to = gmResponse.data.payload.headers.find(header => header.name === 'To').value;
     email.headers.date = gmResponse.data.payload.headers.find(header => header.name === 'Date').value;
     email.headers.subject = gmResponse.data.payload.headers.find(header => header.name === 'Subject').value;
 
+    //Add the email body to the JSON object (bodyFull) from message. The data is located in different places depending on the email type.
+    //So, we will use a switch statement to determine the appropriate body to add depending on email type.
+    
+    //Create switch statement to determine how to handle the email. Switch on gmResponse.data.payload.mimeType. Options are: 'text/html', 'multipart/alternative', 'multipart/related', 'multipart/mixed'. If the email is not one of these types, return an error.
+
+    //Ultimately, I want to return the email part that is text/html as textHtmlBody
+    let textHtmlBody;
+
+    switch (gmResponse.data.payload.mimeType) {
+      case 'text/html':
+        textHtmlBody = gmResponse.data.payload.body;
+        break;
+
+      case 'multipart/alternative':
+        textHtmlBody = gmResponse.data.payload.parts.find(part => part.mimeType === 'text/html').body;
+
+        break;
+
+      case 'multipart/related':
+        textHtmlBody = gmResponse.data.payload.parts.find(part => part.mimeType === 'multipart/alternative').parts.find(part => part.mimeType === 'text/html').body;
+
+        break;
+
+      case 'multipart/mixed':
+        textHtmlBody = gmResponse.data.payload.parts.find(part => part.mimeType === 'multipart/related').parts.find(part => part.mimeType === 'multipart/alternative').parts.find(part => part.mimeType === 'text/html').body;
+
+        break;
+
+      default:
+        return {
+          data: 'Error: Email is not a valid type',
+          size: 0
+        };
+  }
+
+
     //dencode the Base64 body of the email (path 'message.data.payload.parts[1].body.data')
     //place into bodyFull object
     
-    email.bodyFull.htmlText = decodeBody(gmResponse.data.payload.parts[1].body.data);
-    email.bodyFull.plainText = decodeBody(gmResponse.data.payload.parts[0].body.data);
+    email.bodyFull.htmlText = decodeBody(textHtmlBody.data);
+    email.bodyFull.plainText = decodeBody(textHtmlBody.data);
 
     //split bodyFull.htmlText on first instance of '<br>' and place first part into bodyAbbreviated.htmlTextabv 
     //convert from html and place in bodyAbbreviated.plainTextabv

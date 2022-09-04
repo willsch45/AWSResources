@@ -65,7 +65,7 @@ function convertEmailToSummaryInput(email) {
     emailString += rawInput;
 
     return {
-        id: '',
+        id: email.id,
         prompt: emailString,
         rawInput: rawInput,
         instructions: instructions,

@@ -1,60 +1,49 @@
 const AWS = require("aws-sdk");
 const { authenticateGoogle } = require("./middleware/authentication/gmailAuthentication");
 const { authenticateOpenAI } = require("./middleware/authentication/openAIAuthentication"); 
-// const { getGMailHeaders } = require("./middleware/emailFetchers/fetchGmailHeaders");
+const { getGMailHeaders } = require("./middleware/emailFetchers/fetchGmailHeaders");
 const { getGMailContent } = require("./middleware/emailFetchers/fetchGmailFullContent");
 const { convertEmailToSummaryInput } = require("./middleware/summarization/preparationAndCleaning/emailPreparation");
 const { getSummarization, costCalculator } = require("./middleware/summarization/summarizationEngine/summarizationEngine");
 
-const exampleEmail = 
-  {
-    "id": "1824fd7318741b20",
-    "threadID": "1824fd7318741b20",
-    "from": "Rentmoola Operations <ops@rentmoola.com>",
-    "to": "Rentmoola Operations <ops@rentmoola.com>",
-    "date": "Sat, 30 Jul 2022 09:00:00 -0700",
-    "subject": "Update Your Payment Method(s) on letus",
-    "snippet": "Dear letus User, In keeping with standard maintenance procedures to protect your personal and payment information, we have reset payment methods saved in letus. If you have previously created payment",
-    "labels": [
-      "IMPORTANT",
-      "CATEGORY_PERSONAL",
-      "INBOX"
-    ]
-  }; 
+const exampleEmails = ['182d59081f604a61', '18241afe2deec277', '182d75928e7ecaa8'];
 
-function testSummary(){
+// function testHeaders(){
  
 
+//   const gmail = authenticateGoogle();
+
+//   const messageID = exampleEmail;
+
+//   getGMailHeaders(gmail, messageID).then(data => {
+//     console.log(data);
+//   }).catch(err => {
+//     console.log('Lambda processing error: ' + err);
+//   });
+// }
+
+function testContent(){
+  //Authenticate with Google to get gmail variable, then get email Headers
   const gmail = authenticateGoogle();
-  const openai = authenticateOpenAI();
 
-  //print content from getGMailContent by passing through gmail and exampleEmail
-  //then pass the result to the convertEmailToSummaryInput function
-  //then pass to summarizeEmail function and print the result
-  getGMailContent(gmail, exampleEmail).then(email => {
-    const summaryInput = convertEmailToSummaryInput(email);
-    getSummarization(openai, summaryInput).then(summary => {
-      console.log(summary);
-    }).catch(err => {
-      console.log(err);
-    }).finally(() => {
-      console.log("Done");
-      
-    })
-
+  //Loop through the example emails and get the content for each one using getGmailContent function
+  getGMailContent(gmail, exampleEmails[0]).then(data => {
+    console.log(data.bodyAbbreviated.plainTextAbv);
+  }).catch(err => {
+    console.log('Error at email 1: ' + err);
   });
 
-  return ;
+  getGMailContent(gmail, exampleEmails[1]).then(data => {
+    console.log(data.bodyAbbreviated.plainTextAbv);
+  }).catch(err => {
+    console.log('Error at email 2: ' + err);
+  });
+
+  getGMailContent(gmail, exampleEmails[2]).then(data => {
+    console.log(data.bodyAbbreviated.plainTextAbv);
+  }).catch(err => {
+    console.log('Error at email 3: ' + err);
+  });
 }
 
-function testParseEmail(){
-  const gmail = authenticateGoogle();
-
-  getGMailContent(gmail, exampleMessagesArr).then(emails => {
-    emails.forEach(email => {
-      console.log(email);
-    })
-  })
-}
-
-testSummary();
+testContent();

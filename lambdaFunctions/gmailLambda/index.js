@@ -17,51 +17,79 @@ exports.handler = async (event, context) => {
 
   try {
     switch (event.routeKey) {
-      
       case "GET /emailList":
-        //PENDING implementation
+        try {
+          //Potential query params (maxResults, pageToken, q (q is a customer query string which fits the gmail search format), labelIds[], includeSpamTrash)
+          const { maxResults, pageToken, q, labelIds, includeSpamTrash } = event.queryStringParameters;
+          const gmailL = authGmailLambda();
 
-        //Potential query params (maxResults, pageToken, q (q is a customer query string which fits the gmail search format), labelIds[], includeSpamTrash)
-        const { maxResults, pageToken, q, labelIds, includeSpamTrash } = event.queryStringParameters;
-        const gmailL = authGmailLambda();
+          // Split the query string into an array of words
+          const labelArray = labelIds.split(",");
 
-        body = await getGMailList(gmailL, maxResults, pageToken, q, labelIds, includeSpamTrash).catch(err => {
+          body = await getGMailList(gmailL, maxResults, pageToken, q, labelArray, includeSpamTrash).catch(err => {
+            statusCode = 500;
+            body = 'Lambda processing error: ' + err;
+          });
+        } catch (error) {
+          body = 'Error: ' + error;
           statusCode = 500;
-          body = 'Lambda processing error: ' + err;
-        });
+        }
       
         break;
-      
-      case "GET /emailHeaders": //Now this is timing out the function. Not sure what to make of that
+
+      case "GET /email/content": 
+        try {
+
           //get the number of emails to generate
-          const numEmails = event.queryStringParameters.count;
+          const messageIDc = event.queryStringParameters.messageID; //Changed
+            //body = messageID; things are good through this point
 
           //Authenticate with Google to get gmail variable, then get email Headers
-          const gmailH = authGmailLambda();
+          const gmailc = authGmailLambda();
 
-          body = await getGMailHeaders(gmailH, numEmails).catch(err => {
+          body = await getGMailContent(gmailc, messageIDc).catch(err => {
             body = 'Lambda processing error: ' + err;
             statusCode = 500;
           });
 
+        } catch (error) {
+          body = 'Error: ' + error;
+          statusCode = 500;
+        }
+
+        break;
+      
+      case "GET /emailHeaders": 
+        try {
+          //get the number of emails to generate
+          const messageIDh = event.queryStringParameters.messageID; //Changed
+            //body = messageID; things are good through this point
+
+          //Authenticate with Google to get gmail variable, then get email Headers
+          const gmailh = authGmailLambda();
+
+          body = await getGMailHeaders(gmailh, messageIDh).catch(err => {
+            body = 'Lambda processing error: ' + err;
+            statusCode = 500;
+          });
+
+        } catch (error) {
+          body = 'Error: ' + error;
+          statusCode = 500;
+        }
+
         break;
 
-      case "POST /emailSummary":
-        //The event payload is going to be an ID for a gmail message
-          /* {
-                // id: ''
-          } */
-
-          //Get event payload and save to a variable
-          const eventPayload2 = JSON.parse(event.body);
-          const receivedEmailID = eventPayload2.id;
+      case "GET /emailSummary":
+        try {
+          const messageIDs = event.queryStringParameters.messageID;
 
           //1. Authenticate to get Gmail and OpenAI config variables
-          const gmailS = authGmailLambda();
+          const gmails = authGmailLambda();
           const openAIS = authOpenAILambda();
 
           //2.1 For each email in the array, get the email content
-          const fullEmail = await getGMailContent(gmailS, receivedEmailID).catch(err => {
+          const fullEmail = await getGMailContent(gmails, messageIDs).catch(err => {
             body = 'Lambda processing error, Gmail content: ' + err;
             statusCode = 500;
           });
@@ -71,17 +99,29 @@ exports.handler = async (event, context) => {
             body = 'Lambda processing error, OpenAI: ' + err;
             statusCode = 500;
           });
-
-          // Here is where we will save the prompt & completion to the database
-            // TO DO!!! 
+          
+          await dynamo
+          .put({
+            TableName: "etCetera_Completions",
+            Item: {
+              completionID: completion.openAIReturn.id,
+              completion: completion,
+            }
+          })
+          .promise();
 
           body = {
             email: fullEmail,
             prompt: prompt.prompt,
             completion: completion.completion
           }
+
+        } catch (error) {
+          body = 'Error: ' + error;
+          statusCode = 500;
+        }
           
-          break;
+        break;
 
       default:
         throw new Error(`Unsupported route: "${event.routeKey}"`);

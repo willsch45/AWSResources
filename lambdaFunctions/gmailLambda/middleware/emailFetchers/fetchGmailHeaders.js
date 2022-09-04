@@ -29,37 +29,17 @@ async function getGMailList(gmail, maxResults, pageToken, q, labelIds, includeSp
 
 
 //function to get a list of emails from the user's gmail account
-async function getGMailHeaders(gmail, numEmails) {
+async function getGMailHeaders(gmail, messageID) {
     try {
-        //create a function that takes in the OAuth2 client and returns a list 5 of emails from the user's gmail account
-        const response = await gmail.users.messages.list({
+        //get emails from .get() function using Query parameters Format = METADATA and metadataHeaders = From,To,Date,Subject
+        const message = deconstructToHeaders(await gmail.users.messages.get({
             userId: 'me',
-            maxResults: numEmails,
-        });
+            id: messageID,
+            format: 'METADATA',
+            metadataHeaders: ['From','To','Date','Subject'], //If you wanted other email components you would add them to the metadataHeaders array
+        }));
 
-        //create a variable to store the messages IDs & an array to store the emails
-        const messagesIDs = response.data.messages.map(message => message.id); //map function does a for loop over the messages array and returns an array of IDs
-        const messageDetails = [];
-
-        //for loop through messagesIDs to get the email itself
-        for (let i = 0; i < messagesIDs.length; i++) {
-            try {
-                //get emails from .get() function using Query parameters Format = METADATA and metadataHeaders = From,To,Date,Subject
-                const message = await gmail.users.messages.get({
-                    userId: 'me',
-                    id: messagesIDs[i],
-                    format: 'METADATA',
-                    metadataHeaders: ['From','To','Date','Subject'], //If you wanted other email components you would add them to the metadataHeaders array
-                });
-
-                //Use deconstructSummary function to deconstruct the email. Add to emails array. No loop needed becuase you are already inside a loop
-                messageDetails.push(deconstructToHeaders(message));
-            } catch (err) {
-                return err;
-            }
-        }
-        
-        return messageDetails;
+        return message;
 
     } catch (err) {
         return err;

@@ -68,7 +68,7 @@ async function getSummarization(openai, instructionSet) {
     const modelConfig = {
         model: "text-davinci-002",
         prompt: instructionSet.prompt,
-        max_tokens: 300, //using davinci model with 300 tokens will result in a maximum charge for response of $0.018 (1.8 cents)
+        max_tokens: 300, //using davinci model with 300 tokens will result in a maximum charge for response of $0.006 (0.6 cents)
         temperature: 1,
         top_p: 1,
         n: 1,
@@ -79,7 +79,6 @@ async function getSummarization(openai, instructionSet) {
     const openAIResponse = await openai.createCompletion(modelConfig);
 
     const returnObject = {
-        id: openAIResponse.data.id,
         instructionSet: instructionSet,
         completion: openAIResponse.data.choices[0].text,
         userFeedback: 'No user feedback',

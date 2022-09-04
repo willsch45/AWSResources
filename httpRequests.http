@@ -21,38 +21,13 @@ Content-Type: application/json
 }
 
 ###
-GET https://iz6b0as539.execute-api.us-west-2.amazonaws.com/emailHeaders?count=1 HTTP/1.1
+GET https://iz6b0as539.execute-api.us-west-2.amazonaws.com/emailList?maxResults=10&labelIds=UNREAD&labelIds=INBOX  HTTP/1.1
 
 ###
-GET https://iz6b0as539.execute-api.us-west-2.amazonaws.com/emailList?maxResults=5 HTTP/1.1
-
-### Old version of the below
-POST https://iz6b0as539.execute-api.us-west-2.amazonaws.com/emailSummary HTTP/1.1
-Content-Type: application/json
-
-{
-    "email": {
-        "id": "1826f0f28d5ef592",
-        "threadID": "1826f0f28d5ef592",
-        "from": "Elianne Van Slyke <ellievanslyke@gmail.com>",
-        "to": "Patti Segulja-Lau <Patti@pacific-apartments.com>, Bob Taylor <Bob@pacific-apartments.com>",
-        "date": "Fri, 5 Aug 2022 11:30:00 -0600",
-        "subject": "Rent Moola/LetUs Next Steps",
-        "snippet": "Hi everyone - We are still having trouble connecting with LetUs/Rent Moola support to make a building-wide change. Tenants who have reached out to them directly have had success with inputting their",
-        "labels": [
-        "UNREAD",
-        "IMPORTANT",
-        "CATEGORY_PERSONAL",
-        "INBOX"
-        ]
-    }
-    
-}
+GET https://iz6b0as539.execute-api.us-west-2.amazonaws.com/emailHeaders?messageID=182bfa3dfb58c5da HTTP/1.1
 
 ###
-POST https://iz6b0as539.execute-api.us-west-2.amazonaws.com/emailSummary HTTP/1.1
-Content-Type: application/json
+GET https://iz6b0as539.execute-api.us-west-2.amazonaws.com/email/content?messageID=182bfa3dfb58c5da HTTP/1.1
 
-{
-    "id": "1826f0f28d5ef592"
-}
+###
+GET https://iz6b0as539.execute-api.us-west-2.amazonaws.com/emailSummary?messageID=182b9d86726849b8 HTTP/1.1
